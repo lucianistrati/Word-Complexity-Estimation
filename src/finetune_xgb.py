@@ -1,65 +1,44 @@
-# regressor models
-# https://www.programcreek.com/python/example/99826/xgboost.XGBRegressor
-
-# https://www.kaggle.com/jayatou/xgbregressor-with-gridsearchcv
-# https://www.kaggle.com/jayatou/xgbregressor-with-gridsearchcv
-# https://www.kaggle.com/jayatou/xgbregressor-with-gridsearchcv
-# https://codingdict.com/sources/py/xgboost/12190.html
-import csv
-import linalg
-import matplotlib.pyplot as plt
-import nltk
-import numpy as np
-import os
-import pdb
-import torch
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from copy import deepcopy
-from gensim import corpora
-from gensim.models import Word2Vec
-from keras.layers import Dense
-from keras.models import Sequential
+from sklearn.metrics import mean_absolute_error, confusion_matrix, make_scorer
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from torch.utils.data import Dataset, DataLoader, random_split
+from transformers import RobertaTokenizer, RobertaModel
 from keras.wrappers.scikit_learn import KerasRegressor
-from nltk.corpus import stopwords
+from sklearn.model_selection import cross_validate
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
-from pandas import read_csv
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import KFold
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.svm import SVR
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data import random_split
-from tqdm import tqdm
-from transformers import RobertaTokenizer, RobertaModel
+from sklearn.decomposition import PCA
+from matplotlib import pyplot as plt
+from keras.models import Sequential
+from gensim.models import Word2Vec
+from sklearn.manifold import TSNE
+from nltk.corpus import stopwords
 from transformers import pipeline
 from xgboost import XGBRegressor
-from matplotlib import pyplot as plt
+from keras.layers import Dense
+from pandas import read_csv
+from sklearn.svm import SVR
+from gensim import corpora
+from copy import deepcopy
+from tqdm import tqdm
 from typing import List
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from xgboost import XGBRegressor
-"""
-regressors:
 
- RandomForestRegressor
- SVR
- xgboost.XGBRegressor
- dc.models.XGBoostModel
- ligthgbm.LGBMRegressor
- catboost.CatBoostRegressor
+import torch.nn.functional as F
+import torch.optim as optim
+import torch.nn as nn
+import numpy as np
 
-"""
+import linalg
+import torch
+import nltk
+import csv
+import pdb
+import os
+
+
 def train_model(regressor, X_train, y_train, label_scaler):
     X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.1)
     regressor.fit(X_train, y_train)
@@ -67,12 +46,7 @@ def train_model(regressor, X_train, y_train, label_scaler):
     return mean_absolute_error(y_validation, y_pred)
 
 
-from sklearn.model_selection import cross_validate
-from sklearn.metrics import make_scorer
-from sklearn.metrics import confusion_matrix
-
 def finetune_xgb(X_train, y_train, X_test, label_scaler):
-    # https://www.analyticsvidhya.com/blog/2021/06/predict-future-sales-using-xgbregressor/
     max_depth_values = [5, 9, 10, 14]
     min_child_weight_values = [1, 5, 6, 10]
 
@@ -125,6 +99,14 @@ def finetune_xgb(X_train, y_train, X_test, label_scaler):
             best_alpha = alpha
 
     print("BEST ALPHA: ********", best_alpha)
+
+
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()
 
 """
 alpha=0.3, subsample=1, cosample_bytree=1, max_depth=10, min_child_weight=1

@@ -1,50 +1,57 @@
-import csv
-import linalg
-import matplotlib.pyplot as plt
-import nltk
-import numpy as np
-import os
-import pdb
-import torch
-import pdb
-import torch
-import torch.nn as nn
+from used_repos.personal.Word_Complexity_Estimation.src.feature_extractor import check_word_compounding, count_antonyms,\
+    count_average_phonemes_per_pronounciation, count_capital_chars, count_capital_words, \
+    count_definitions_average_characters_length, count_definitions_average_tokens_length, \
+    count_definitions_characters_length, count_definitions_tokens_length, count_entailments, \
+    count_holonyms, count_hypernyms, count_hyponyms, count_letters, count_meronyms, count_part_holonyms, \
+    count_part_meroynms, count_pronounciation_methods, count_punctuations, count_substance_holonyms, \
+    count_substance_meroynms, count_synonyms, count_total_phonemes_per_pronounciations, count_troponyms, \
+    custom_wup_similarity, get_average_syllable_count, get_base_word_pct, get_base_word_pct_stem, get_num_pos_tags, \
+    get_phrase_len, get_phrase_num_tokens, get_target_phrase_ratio, get_total_syllable_count, get_word_frequency, \
+    get_word_position_in_phrase, get_wup_avg_similarity, has_both_affixes, has_both_affixes_stem, has_prefix, \
+    has_prefix_stem, has_suffix, has_suffix_stem, is_plural, is_singular, mean, median, word_frequency, \
+    word_origin, word_polarity, word_tokenize
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from src.embeddings_train.train_word2vec import document_preprocess
+from transformers import RobertaTokenizer, RobertaModel, pipeline
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from torch.utils.data import Dataset, DataLoader, random_split
+from keras.wrappers.scikit_learn import KerasRegressor
+from sklearn.metrics import mean_absolute_error
+from nltk.stem import WordNetLemmatizer
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
+from matplotlib import pyplot as plt
+from keras.models import Sequential
+from gensim.models import Word2Vec
+from nltk.corpus import stopwords
+from sklearn.manifold import TSNE
+from xgboost import XGBRegressor
+from keras.layers import Dense
+from pandas import read_csv
+from sklearn.svm import SVR
+from gensim import corpora
+from copy import deepcopy
+from typing import List
+from tqdm import tqdm
+
 import torch.nn.functional as F
 import torch.optim as optim
-from copy import deepcopy
-from gensim import corpora
-from gensim.models import Word2Vec
-from keras.layers import Dense
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasRegressor
-from matplotlib import pyplot as plt
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
-from pandas import read_csv
-from sklearn.decomposition import PCA
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.manifold import TSNE
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import KFold
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.svm import SVR
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data import random_split
-from tqdm import tqdm
-from transformers import RobertaTokenizer, RobertaModel
-from transformers import pipeline
-from typing import List
-from xgboost import XGBRegressor
+import torch.nn as nn
+import numpy as np
 
+import textstat
+import linalg
+import torch
+import nltk
+import copy
+import csv
+import pdb
+import os
 
 numpy_arrays_path = "data/numpy_data"
+
 
 def create_submission_file(ids, labels, imputer_strategy: str = "max"):
     submission_file_path = "data/submission.txt"
@@ -66,15 +73,17 @@ def create_submission_file(ids, labels, imputer_strategy: str = "max"):
                     raise Exception("Unknown imputer strategy")
             f.write(str(id) + "," + str(label) + "\n")
 
+
 def load_data(embedding_feature: str = "target_word", embedding_model: str = "roberta"):
-    X_train = np.load(file=os.path.join(numpy_arrays_path, "X_train_" + embedding_feature + "_" + embedding_model + ".npy"), allow_pickle=True)
-    y_train = np.load(file=os.path.join(numpy_arrays_path, "y_train_" + embedding_feature + "_" + embedding_model + ".npy"), allow_pickle=True)
-    X_test = np.load(file=os.path.join(numpy_arrays_path, "X_test_" + embedding_feature + "_" + embedding_model + ".npy"), allow_pickle=True)
+    X_train_filepath = os.path.join(numpy_arrays_path, "X_train_" + embedding_feature + "_" + embedding_model + ".npy")
+    X_train = np.load(file=X_train_filepath, allow_pickle=True)
+    y_train_filepath = os.path.join(numpy_arrays_path, "y_train_" + embedding_feature + "_" + embedding_model + ".npy")
+    y_train = np.load(file=y_train_filepath, allow_pickle=True)
+    X_test_filepath = os.path.join(numpy_arrays_path, "X_test_" + embedding_feature + "_" + embedding_model + ".npy")
+    X_test = np.load(file=X_test_filepath, allow_pickle=True)
 
     y_train = y_train.astype("float32")
 
-    # import pdb
-    # pdb.set_trace()
     return X_train, y_train, X_test
 
 
@@ -119,3 +128,10 @@ def load_multiple_models(embedding_models: List[str], embedding_features: List[s
         X_test = np.hstack(X_test_list)
     return X_train, y_train, X_test
 
+
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()

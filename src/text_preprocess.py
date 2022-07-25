@@ -1,65 +1,71 @@
-import csv
-import linalg
-import matplotlib.pyplot as plt
-import nltk
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.feature_extractor import \
+    check_word_compounding, count_antonyms, count_average_phonemes_per_pronounciation, count_capital_chars, \
+    count_capital_words, count_definitions_average_characters_length, count_definitions_average_tokens_length, \
+    count_definitions_characters_length, count_definitions_tokens_length, count_entailments, \
+    count_holonyms, count_hypernyms, count_hyponyms, count_letters, count_meronyms, count_part_holonyms, \
+    count_part_meroynms, count_pronounciation_methods, count_punctuations, count_substance_holonyms, \
+    count_substance_meroynms, count_synonyms, count_total_phonemes_per_pronounciations, count_troponyms, \
+    custom_wup_similarity, get_average_syllable_count, get_base_word_pct, get_base_word_pct_stem, get_num_pos_tags, \
+    get_phrase_len, get_phrase_num_tokens, get_target_phrase_ratio, get_total_syllable_count, get_word_frequency, \
+    get_word_position_in_phrase, get_wup_avg_similarity, has_both_affixes, has_both_affixes_stem, has_prefix, \
+    has_prefix_stem, has_suffix, has_suffix_stem, is_plural, is_singular, mean, median, word_frequency, \
+    word_origin, word_polarity, word_tokenize
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.feature_extractor.train_diff_model \
+    import mask_expression, predict_masked_tokens
+from transformers import AlbertTokenizer, TFAlbertModel
+from transformers import RobertaTokenizer, RobertaModel
+from sentence_transformers import SentenceTransformer
+from transformers import BertTokenizer, TFBertModel
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from src.embeddings_train.train_word2vec import document_preprocess
+from transformers import pipeline
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from torch.utils.data import Dataset, DataLoader, random_split
+from nltk.tokenize import TreebankWordTokenizer as twt
+from keras.wrappers.scikit_learn import KerasRegressor
+from sklearn.metrics import mean_absolute_error
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet as wn
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
+from matplotlib import pyplot as plt
+from keras.models import Sequential
+from gensim.models import Word2Vec
+from nltk.corpus import stopwords
+from sklearn.manifold import TSNE
+from xgboost import XGBRegressor
+from keras.layers import Dense
+from pandas import read_csv
+from sklearn.svm import SVR
+from gensim import corpora
+from copy import deepcopy
+from typing import List
+from tqdm import tqdm
 
-import textstat
-
-textstat.set_lang("en")
-
-
-import numpy as np
-import os
-import pdb
-import pdb
-import torch
-import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from copy import deepcopy
-from gensim import corpora
-from gensim.models import Word2Vec
-from keras.layers import Dense
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasRegressor
-from matplotlib import pyplot as plt
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
-from pandas import read_csv
-from sklearn.decomposition import PCA
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.manifold import TSNE
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import KFold
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.svm import SVR
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data import random_split
-from tqdm import tqdm
-from transformers import RobertaTokenizer, RobertaModel
-from transformers import pipeline
-from typing import List
-from xgboost import XGBRegressor
+import torch.nn as nn
+import numpy as np
 
-from src.feature_extractor import *
+import textstat
+import linalg
+import torch
+import nltk
+import copy
+import csv
+import pdb
+import os
 
+
+textstat.set_lang("en")
+stop_words = set(stopwords.words('english'))
 PAD_TOKEN = "__PAD__"
 word2vec_model = Word2Vec.load("src/embeddings_train/word2vec.model")
 
 numpy_arrays_path = "data/numpy_data"
 # word2vec_model = Word2Vec.load("src/embeddings_train/fasttext.model")
-
-import copy
-from src.embeddings_train.train_word2vec import document_preprocess
-
 
 # def document_preprocess(document):
 #     return document.lower().split()
@@ -70,37 +76,50 @@ from src.embeddings_train.train_word2vec import document_preprocess
 
 
 def embed_text(text, embedding_model: str = "word2vec_trained", phrase="", start_offset="", end_offset=""):
-    """This function embedds the text given using an embedding model, it might also use the phrase, start_offset or the end_offset for certain embeddings"""
-    # print(embedding_model)
+    """This function embedds the text given using an embedding model, it might also use the phrase, start_offset or the
+    end_offset for certain embeddings"""
     if embedding_model == "roberta":
-        encoded_input = roberta_tokenizer(text, return_tensors='pt')
+        roberta_tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+        roberta_model = RobertaModel.from_pretrained("roberta-base")
+        encoded_input = roberta_tokenizer(text, return_tensors="pt")
         output = roberta_model(**encoded_input)
         return torch.reshape(output.pooler_output, shape=(output.pooler_output.shape[1],)).detach().numpy()
     elif embedding_model == "sentence_transformer":
+        sent_transf_model = SentenceTransformer("all-mpnet-base-v2")
         embedding = sent_transf_model.encode(text)
         return embedding
     elif embedding_model == "sentence_transformer_multi_qa":
+        sent_transf_model_multi_qa = SentenceTransformer("multi-qa-mpnet-base-dot-v1")
         embedding = sent_transf_model_multi_qa.encode(text)
         return embedding
     elif embedding_model == "roberta_large":
-        encoded_input = roberta_large_tokenizer(text, return_tensors='pt')
+        roberta_large_tokenizer = RobertaTokenizer.from_pretrained("roberta-large")
+        roberta_large_model = RobertaModel.from_pretrained("roberta-large")
+        encoded_input = roberta_large_tokenizer(text, return_tensors="pt")
         output = roberta_large_model(**encoded_input)
         return torch.reshape(output.pooler_output, shape=(output.pooler_output.shape[1],)).detach().numpy()
     elif embedding_model == "bert_large":
-        encoded_input = bert_large_tokenizer(text, return_tensors='tf')
+        bert_large_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
+        bert_large_model = TFBertModel.from_pretrained("bert-large-uncased")
+        encoded_input = bert_large_tokenizer(text, return_tensors="tf")
         output = bert_large_model(**encoded_input)
         return np.reshape(np.array(output.pooler_output), newshape=(output.pooler_output.shape[1],))
     elif embedding_model == "albert-base-v2":
-        encoded_input = albert_tokenizer(text, return_tensors='tf')
+        albert_tokenizer = AlbertTokenizer.from_pretrained("albert-base-v2")
+        albert_model = TFAlbertModel.from_pretrained("albert-base-v2")
+        encoded_input = albert_tokenizer(text, return_tensors="tf")
         output = albert_model(**encoded_input)
         return np.reshape(np.array(output.pooler_output), newshape=(output.pooler_output.shape[1],))
     elif embedding_model == "roberta_distil":
+        sent_transf_model_distil_roberta = SentenceTransformer("all-distilroberta-v1")
         embedding = sent_transf_model_distil_roberta.encode(text)
         return embedding
     elif embedding_model == "all_minimlm_l12":
+        all_minimlm_l12_model = SentenceTransformer("all-MiniLM-L12-v2")
         embedding = all_minimlm_l12_model.encode(text)
         return embedding
     elif embedding_model == "all_minimlm_l6":
+        all_minimlm_l6_model = SentenceTransformer("all-MiniLM-L6-v2")
         embedding = all_minimlm_l6_model.encode(text)
         return embedding
     elif embedding_model.startswith("tfidfvectorizer"):
@@ -130,23 +149,24 @@ def embed_text(text, embedding_model: str = "word2vec_trained", phrase="", start
 
 
 def embed_data(embedding_feature: str, embedding_model: str):
-    """This function embedds the data based on a chosen feature to be emebedded/chosen set of rules to be applied over the feature with a certain alias
-    and then an embedding model might be used to pursue the feature extraction"""
+    """This function embedds the data based on a chosen feature to be emebedded/chosen set of rules to be applied
+    over the feature with a certain alias and then an embedding model might be used to pursue the feature extraction"""
     train_path = "data/train_full.txt"
     test_path = "data/test.txt"
     if embedding_feature == "phrase":
         column_idx = 1
     elif embedding_feature == "target_word":
         column_idx = 4
-    # else:
-    #     raise Exception("Wrong embedding feature!")
 
     train_columns = ["id", "phrase", "start_offset", "end_offset", "target_word",
                      "native_annotators", "non_native_annotators", "difficult_native_annotators",
                      "difficult_non_native_annotators", "label"]
-    print("Embedding feature:", embedding_feature)
     test_columns = ["id", "phrase", "start_offset", "end_offset", "target_word",
                     "native_annotators", "non_native_annotators"]
+
+    print(len(train_columns) == len(test_columns))
+
+    print("Embedding feature:", embedding_feature)
 
     X_train, y_train, X_test = [], [], []
 
@@ -172,7 +192,8 @@ def embed_data(embedding_feature: str, embedding_model: str):
                 phrase = row[1]
                 start_offset = int(row[2])
                 end_offset = int(row[3])
-                outputs = embed_text(row[column_idx], embedding_model=embedding_model, phrase=phrase, start_offset=start_offset, end_offset=end_offset)
+                outputs = embed_text(row[column_idx], embedding_model=embedding_model, phrase=phrase,
+                                     start_offset=start_offset, end_offset=end_offset)
                 # vecs = []
                 # res_types = []
                 # final_vecs = []
@@ -210,12 +231,15 @@ def embed_data(embedding_feature: str, embedding_model: str):
             elif embedding_feature == "phrase_special_tokenized":
                 start_offset = int(row[2])
                 end_offset = int(row[3])
-                X_train.append(embed_text(row[1][:start_offset].lower().split() + [row[4].lower()] + row[1][end_offset:].lower().split(), embedding_model=embedding_model))
+                text_ = row[1][:start_offset].lower().split() + [row[4].lower()] + row[1][end_offset:].lower().split()
+                X_train.append(embed_text(text_, embedding_model=embedding_model))
             y_train.append(float(row[8]) / float(row[6]))
 
     X_train, y_train = np.array(X_train), np.array(y_train)
 
-    np.save(file=os.path.join(numpy_arrays_path, "y_train_" + embedding_feature + "_" + embedding_model + "_non_native.npy"), arr=y_train)
+    y_train_filename = "y_train_" + embedding_feature + "_" + embedding_model + "_non_native.npy"
+    y_train_filepath = os.path.join(numpy_arrays_path, y_train_filename)
+    np.save(file=y_train_filepath, arr=y_train)
 
     with open(test_path) as f:
         reader = csv.reader(f, delimiter="\t")
@@ -232,7 +256,8 @@ def embed_data(embedding_feature: str, embedding_model: str):
                 phrase = row[1]
                 start_offset = int(row[2])
                 end_offset = int(row[3])
-                outputs = embed_text(row[column_idx], embedding_model=embedding_model, phrase=phrase, start_offset=start_offset, end_offset=end_offset)
+                outputs = embed_text(row[column_idx], embedding_model=embedding_model, phrase=phrase,
+                                     start_offset=start_offset, end_offset=end_offset)
                 # vecs = []
                 # res_types = []
                 # final_vecs = []
@@ -262,11 +287,10 @@ def embed_data(embedding_feature: str, embedding_model: str):
                 end_offset = int(row[3])
                 masked_phrase = mask_expression(phrase, start_offset, end_offset)
                 masked_prediction = predict_masked_tokens(masked_phrase)
-                # print(masked_prediction)
                 X_test.append(embed_text(masked_prediction, embedding_model=embedding_model))
             elif embedding_feature == "phrase_special_tokenized":
-                # print(row[4].lower())
-                X_test.append(embed_text(row[1][:start_offset].lower().split() + [row[4].lower()] + row[1][end_offset:].lower().split(), embedding_model=embedding_model))
+                text_ = row[1][:start_offset].lower().split() + [row[4].lower()] + row[1][end_offset:].lower().split()
+                X_test.append(embed_text(text_, embedding_model=embedding_model))
 
     X_test = np.array(X_test)
 
@@ -310,7 +334,6 @@ def embed_data(embedding_feature: str, embedding_model: str):
         X_test = tfidfvectorizer.transform(X_test).toarray()
     elif embedding_model == "gensim_doc2bow":
         corpus = [x for x in X_train] + [x for x in X_test]
-        import pdb
         dict_d = corpora.Dictionary(corpus)
 
         X_train = [dict_d.doc2bow(x) for x in X_train]  # one list of tuples of two integers
@@ -328,14 +351,11 @@ def embed_data(embedding_feature: str, embedding_model: str):
     return X_train, y_train, X_test
 
 
-from nltk.corpus import wordnet
-
-
 def count_word_senses(word, tokens=None):
-    tokens = word_tokenize(word) if tokens == None else tokens
+    tokens = word_tokenize(word) if tokens is None else tokens
     ans = []
     for token in tokens:
-        ans.append(len(wordnet.synsets(token)))
+        ans.append(len(wn.synsets(token)))
     if len(ans):
         return mean(ans)
     return 0.0
@@ -371,11 +391,8 @@ def get_consonants_pct(word):
     return count_consonants(word) / len(word)
 
 
-import nltk
-
-
 def get_part_of_speech(sentence, tokens=None):
-    tokens = word_tokenize(sentence) if tokens == None else tokens
+    tokens = word_tokenize(sentence) if tokens is None else tokens
     pos_tags = nltk.pos_tag(tokens)
     return " ".join([pos_tag[1] for pos_tag in pos_tags])
 
@@ -384,18 +401,12 @@ def get_good_vectorizer():
     return TfidfVectorizer(analyzer='char_wb', n_gram_range=(1, 4))
 
 
-from nltk.tokenize import TreebankWordTokenizer as twt
-
-
 def spans(phrase):
     return list(twt().span_tokenize(phrase))
 
 
-stop_words = set(stopwords.words('english'))
-
-
 def count_sws(text, tokens=None):
-    if tokens == None:
+    if tokens is None:
         tokens = word_tokenize(text)
     return len([tok for tok in tokens if tok.lower() in stop_words])
 
@@ -461,109 +472,63 @@ ERRORS = 0
 
 
 def get_paper_features(phrase, target, start_offset, end_offset):
+    """
+    :param phrase:
+    :param target:
+    :param start_offset:
+    :param end_offset:
+    :return:
+    """
     context_tokens = get_context_tokens(phrase, start_offset, end_offset)
-    if context_tokens == None:
+    if context_tokens is None:
         context_tokens = []
-    word = target
-    global ERRORS, GOOD
-    target_ = target
 
-    # so far 0.057701 just with target and the 24 features
     num_features = []
+    word = target
+    num_features_ = [count_letters(target),
+                     count_consonants(target),
+                     count_vowels(target),
+                     get_vowel_pct(target),
+                     get_consonants_pct(target),
+                     get_double_consonants_pct(target),
+                     count_word_senses(target, tokens=word_tokenize(target)),
+                     mean([count_word_senses(context_tok) for context_tok in context_tokens]),
+                     get_base_word_pct(target, tokens=word_tokenize(word)),
+                     has_suffix(target, tokens=word_tokenize(word)),
+                     count_letters(target),
+                     get_base_word_pct_stem(target, tokens=word_tokenize(word)),
+                     has_both_affixes_stem(target, tokens=word_tokenize(word)),
+                     count_hypernyms(target, tokens=word_tokenize(word)),
+                     count_hyponyms(target, tokens=word_tokenize(word)),
+                     count_antonyms(target, tokens=word_tokenize(word)),
+                     count_definitions_average_tokens_length(target, tokens=word_tokenize(word)),
+                     count_definitions_average_characters_length(target, tokens=word_tokenize(word)),
+                     count_definitions_tokens_length(target, tokens=word_tokenize(word)),
+                     count_total_phonemes_per_pronounciations(target, tokens=word_tokenize(word)),
+                     get_word_frequency(target, tokens=word_tokenize(word)),
+                     get_average_syllable_count(target),
+                     check_word_compounding(target),
+                     get_base_word_pct(target),
+                     ]
+    for feature in num_features_:
+        num_features.append(feature)
+    # num_features.append(textstat.flesch_reading_ease(target))
+    # num_features.append(textstat.flesch_kincaid_grade(target))
+    # num_features.append(textstat.smog_index(target))
+    # num_features.append(textstat.coleman_liau_index(target))
+    # num_features.append(textstat.automated_readability_index(target))
+    # num_features.append(textstat.dale_chall_readability_score(target))
+    # num_features.append(textstat.difficult_words(target))
+    # num_features.append(textstat.linsear_write_formula(target))
+    # num_features.append(textstat.gunning_fog(target))
 
-    for target in [target_]:  # + context_tokens:
-        word = target
-        num_features_ = [count_letters(target),
-                         count_consonants(target),
-                         count_vowels(target),
-                         get_vowel_pct(target),
-                         get_consonants_pct(target),
-                         get_double_consonants_pct(target),
-                         count_word_senses(target, tokens=word_tokenize(target)),
-                         mean([count_word_senses(context_tok) for context_tok in context_tokens]),
-                         get_base_word_pct(target, tokens=word_tokenize(word)),
-                         has_suffix(target, tokens=word_tokenize(word)),
-                         count_letters(target),
-                         get_base_word_pct_stem(target, tokens=word_tokenize(word)),
-                         has_both_affixes_stem(target, tokens=word_tokenize(word)),
-                         count_hypernyms(target, tokens=word_tokenize(word)),
-                         count_hyponyms(target, tokens=word_tokenize(word)),
-                         count_antonyms(target, tokens=word_tokenize(word)),
-                         count_definitions_average_tokens_length(target, tokens=word_tokenize(word)),
-                         count_definitions_average_characters_length(target, tokens=word_tokenize(word)),
-                         count_definitions_tokens_length(target, tokens=word_tokenize(word)),
-                         count_total_phonemes_per_pronounciations(target, tokens=word_tokenize(word)),
-                         get_word_frequency(target, tokens=word_tokenize(word)),
-                         get_average_syllable_count(target),
-                         check_word_compounding(target),
-                         get_base_word_pct(target),
-                         ]
-        for feature in num_features_:
-            num_features.append(feature)
-        test_data = target
+    pos_features = get_part_of_speech(target)
+    print(len(pos_features))
 
-        # num_features.append(textstat.flesch_reading_ease(test_data))
-        # num_features.append(textstat.flesch_kincaid_grade(test_data))
-        # num_features.append(textstat.smog_index(test_data))
-        # num_features.append(textstat.coleman_liau_index(test_data))
-        # num_features.append(textstat.automated_readability_index(test_data))
-        # num_features.append(textstat.dale_chall_readability_score(test_data))
-        # num_features.append(textstat.difficult_words(test_data))
-        # num_features.append(textstat.linsear_write_formula(test_data))
-        # num_features.append(textstat.gunning_fog(test_data))
-
-        pos_features = None  # get_part_of_speech(target)
-
-    """
-    vectors = []
-    for context_tok in context_tokens:
-        if context_tok == PAD_TOKEN:
-            continue
-        try:
-            # print(document_preprocess(context_tok))
-            vector = word2vec_model.wv[document_preprocess(context_tok)]
-            vector = np.mean(vector, axis=0)
-            vector = np.reshape(vector, (1, vector.shape[0]))
-            GOOD += 1
-        except KeyError:
-             # continue
-            vector = np.random.rand(1, 300)
-            ERRORS += 1
-        vectors.append(vector)
-
-    import scipy
-    try:
-        # print(document_preprocess(context_tok))
-        vector = word2vec_model.wv[document_preprocess(target)]
-        vector = np.mean(vector, axis=0)
-        vector = np.reshape(vector, (1, vector.shape[0]))
-        GOOD += 1
-    except KeyError:
-        vector = np.random.rand(1, 300)
-        ERRORS += 1
-
-    target_vector = vector
-
-    max_cos_sim = -1e18
-    min_cos_sim = 1e18
-    mean_cos_sim = 0.0
-
-    for vector in vectors:
-        ans = scipy.spatial.distance.cosine(np.reshape(vector, (vector.shape[-1], 1)), np.reshape(target_vector, (target_vector.shape[-1], 1)))
-        max_cos_sim = max(max_cos_sim, ans)
-        min_cos_sim = min(min_cos_sim, ans)
-        mean_cos_sim += ans
-
-    sum_cos_sim = copy.deepcopy(mean_cos_sim)
-    mean_cos_sim /= len(vectors)
-    """
-
-    # num_features += [min_cos_sim, max_cos_sim, mean_cos_sim, sum_cos_sim]
-    
     return num_features
 
 
-if __name__ == '__main__':
+def main():
     phrase = "Both China and the Philippines flexed their muscles on Wednesday."
     start_offset = 56 + len("Wednesday")
     end_offset = 56 + len("Wednesday")
@@ -577,3 +542,5 @@ if __name__ == '__main__':
     # print(get_context_tokens(phrase, start_offset, end_offset))
 
 
+if __name__ == '__main__':
+    main()

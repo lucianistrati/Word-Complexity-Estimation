@@ -1,123 +1,82 @@
-import csv
-import linalg
-import matplotlib.pyplot as plt
-import nltk
-import numpy as np
-import os
-import pdb
-import torch
-import torch
-import torch.nn as nn
+from used_repos.personal.Word_Complexity_Estimation.src.feature_extractor import check_word_compounding, count_antonyms,\
+    count_average_phonemes_per_pronounciation, count_capital_chars, count_capital_words, \
+    count_definitions_average_characters_length, count_definitions_average_tokens_length, \
+    count_definitions_characters_length, count_definitions_tokens_length, count_entailments, \
+    count_holonyms, count_hypernyms, count_hyponyms, count_letters, count_meronyms, count_part_holonyms, \
+    count_part_meroynms, count_pronounciation_methods, count_punctuations, count_substance_holonyms, \
+    count_substance_meroynms, count_synonyms, count_total_phonemes_per_pronounciations, count_troponyms, \
+    custom_wup_similarity, get_average_syllable_count, get_base_word_pct, get_base_word_pct_stem, get_num_pos_tags, \
+    get_phrase_len, get_phrase_num_tokens, get_target_phrase_ratio, get_total_syllable_count, get_word_frequency, \
+    get_word_position_in_phrase, get_wup_avg_similarity, has_both_affixes, has_both_affixes_stem, has_prefix, \
+    has_prefix_stem, has_suffix, has_suffix_stem, is_plural, is_singular, main, mean, median, word_frequency, \
+    word_origin, word_polarity, word_tokenize
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from src.embeddings_train.train_word2vec import document_preprocess
+from transformers import RobertaTokenizer, RobertaModel, pipeline
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from torch.utils.data import Dataset, DataLoader, random_split
+from keras.wrappers.scikit_learn import KerasRegressor
+from sklearn.metrics import mean_absolute_error
+from nltk.stem import WordNetLemmatizer
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
+from matplotlib import pyplot as plt
+from keras.models import Sequential
+from gensim.models import Word2Vec
+from nltk.corpus import stopwords
+from sklearn.manifold import TSNE
+from xgboost import XGBRegressor
+from keras.layers import Dense
+from pandas import read_csv
+from sklearn.svm import SVR
+from gensim import corpora
+from copy import deepcopy
+from typing import List
+from tqdm import tqdm
+
 import torch.nn.functional as F
 import torch.optim as optim
-from copy import deepcopy
-from gensim import corpora
-from gensim.models import Word2Vec
-from keras.layers import Dense
-from keras.models import Sequential
-from keras.wrappers.scikit_learn import KerasRegressor
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from nltk.tokenize import word_tokenize
-from pandas import read_csv
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import KFold
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.svm import SVR
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data import random_split
-from tqdm import tqdm
-from transformers import RobertaTokenizer, RobertaModel
-from transformers import pipeline
-from xgboost import XGBRegressor
-from matplotlib import pyplot as plt
-from typing import List
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+import torch.nn as nn
+import numpy as np
+
+import textstat
+import linalg
+import torch
+import nltk
+import copy
+import csv
 import pdb
-"""
-0.05356
-0.05679756082963418 10 1
-BEST MAX DEPTH: ******** 10
-BEST MIN CHILD WEIGHT: ******** 1
-
-
-0.0577148782946343 0.5
-BEST ALPHA: ******** 0.3
-0.05770197753634105 1 1
-BEST SUBSAMPLE: ******** 1
-BEST COSAMPLE BYTREE: ******** 1
-
-target:
-
-num_characters, num_vowels, num_consonants
-%_characters, %_vowels DA DA
-num_double_consonants as % of total num of letters DA
-n_grams of 1,2,3,4 characters DA DA DA DA
-
-part of speech
-
-number of senses in wordnet (summed if multiple words) 
-
-context:
-min, max and mean for the cosine similarity of the target and each other word from the sentence for word2vec embeddings
-same from 14 for sense embeddings
-
-Embedding feature: target_word
-Embedding model: paper_features
-********************
-TEST RESULT:  0.05910654819095028 with all 5 hyper param optimizations
-********************
-
-
-"""
+import os
 from finetune_xgb import finetune_xgb
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn import neighbors
 from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.linear_model import Ridge
-from sklearn.svm import SVC, SVR
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from xgboost import XGBRegressor, XGBClassifier
+from xgboost import XGBClassifier
 from sklearn.ensemble import AdaBoostClassifier, AdaBoostRegressor
 # from catboost import CatBoostRegressor, CatBoostClassifier
 from sklearn.linear_model import SGDClassifier, SGDRegressor
 from sklearn.linear_model import Perceptron
-from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 # from sklearn.linear_model import RidgeClassifier
-from sklearn.linear_model import Ridge, Lasso, ElasticNet, BayesianRidge, HuberRegressor
+from sklearn.linear_model import Lasso, ElasticNet, BayesianRidge, HuberRegressor
+
 
 def train_basic_model(X_train, y_train, X_test, embedding_feature: str = "target_word", embedding_model: str = "roberta"):
     data_scaler = StandardScaler()
     label_scaler = StandardScaler()
-    regressor = XGBRegressor(eval_metric=mean_absolute_error,  max_depth=10, min_child_weight=1) #alpha=0.3, subsample=1, cosample_bytree=1,)
-    regressor = SVR() # 0.07623
-    regressor = DecisionTreeRegressor() # 0.06727
-    regressor = AdaBoostRegressor() # 0.10
-    regressor = GradientBoostingRegressor() # 0.065
-    regressor = HuberRegressor() # 0.086
-    regressor = SGDRegressor() # 0.10
-    regressor = LinearRegression() # 0.10
-    regressor = MLPRegressor() #
-    regressor = BayesianRidge()
-    regressor = RandomForestRegressor(random_state=100)  # 0.0543
-
-    from sklearn.model_selection import KFold
+    regressor = XGBRegressor(eval_metric=mean_absolute_error, max_depth=10, min_child_weight=1)
 
     def cross_val_func(regressor, X_train, y_train):
         kfolder5 = KFold(n_splits=5, shuffle=False)
@@ -128,7 +87,7 @@ def train_basic_model(X_train, y_train, X_test, embedding_feature: str = "target
     regressors_list = [RandomForestRegressor(random_state=100), LinearRegression(), SVR()]
     regressor_names = ["random forest", "linear regressor", "svr"]
     for (regressor, name) in list(zip(regressors_list, regressor_names)):
-        print(name,":",cross_val_func(regressor, X_train, y_train))
+        print(name, ":", cross_val_func(regressor, X_train, y_train))
     """
     Results of cross validation:
     random forest : [0.062240533679206164, 0.05939914829907854, 0.061634080984518023, 0.05774259217534336, 0.06274576765079065]

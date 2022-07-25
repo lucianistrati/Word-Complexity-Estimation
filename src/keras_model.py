@@ -1,15 +1,3 @@
-import csv
-import linalg
-import matplotlib.pyplot as plt
-import nltk
-import numpy as np
-import os
-import pdb
-import torch
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 from copy import deepcopy
 from gensim import corpora
 from gensim.models import Word2Vec
@@ -20,14 +8,10 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from pandas import read_csv
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import KFold
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.svm import SVR
 from torch.utils.data import Dataset, DataLoader
@@ -36,11 +20,23 @@ from tqdm import tqdm
 from transformers import RobertaTokenizer, RobertaModel
 from transformers import pipeline
 from xgboost import XGBRegressor
-from matplotlib import pyplot as plt
 from typing import List
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+
+import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import torch.optim as optim
+import torch.nn as nn
+import numpy as np
+
+import linalg
+import torch
+import nltk
+import csv
+import pdb
+import os
 
 
 def keras_model(X_train, y_train, X_test):
@@ -57,13 +53,12 @@ def keras_model(X_train, y_train, X_test):
     regressor.add(Dense(n_hiddens, activation='relu'))
     regressor.add(Dense(n_hiddens, activation='relu'))
     regressor.add(Dense(n_outputs))
-    
+
     # compiling the regressor
     regressor.compile(loss='mean_absolute_error', optimizer='adam')
 
     # fitting the regressor
     regressor.fit(X_train, y_train, epochs=num_epochs, batch_size=batch_size)
-
 
     labels = regressor.predict(X_test)
 
@@ -75,6 +70,12 @@ def keras_model(X_train, y_train, X_test):
     return labels
 
 
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()
 """
 ST RESULT:  0.08734544425405025 -> keras
 

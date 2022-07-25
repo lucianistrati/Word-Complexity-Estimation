@@ -1,58 +1,48 @@
-import csv
-import linalg
-import matplotlib.pyplot as plt
-import nltk
-import numpy as np
-import os
-import pdb
-import torch
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from copy import deepcopy
-from gensim import corpora
-from gensim.models import Word2Vec
-from keras.layers import Dense
-from keras.models import Sequential
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.utils import load_data, \
+    create_submission_file, load_multiple_models
+from used_repos.personal.Word_Complexity_Estimation.src.keras_model import keras_model
+from used_repos.personal.Word_Complexity_Estimation.src.text_preprocess import embed_multiple_models, embed_data
+from sklearn.model_selection import KFold, train_test_split, cross_val_score
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from used_repos.personal.Word_Complexity_Estimation.src.xgb_model import train_basic_model
+from src.embeddings_train.train_word2vec import document_preprocess
+from torch.utils.data import Dataset, DataLoader, random_split
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from transformers import RobertaTokenizer, RobertaModel
 from keras.wrappers.scikit_learn import KerasRegressor
-from matplotlib import pyplot as plt
-from nltk.corpus import stopwords
+from sklearn.metrics import mean_absolute_error
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
-from pandas import read_csv
 from sklearn.decomposition import PCA
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.manifold import TSNE
-from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import KFold
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.svm import SVR
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data import random_split
-from tqdm import tqdm
-from transformers import RobertaTokenizer, RobertaModel
+from matplotlib import pyplot as plt
+from keras.models import Sequential
+from gensim.models import Word2Vec
+from sklearn.manifold import TSNE
 from transformers import pipeline
-from typing import List
+from nltk.corpus import stopwords
 from xgboost import XGBRegressor
+from keras.layers import Dense
+from sklearn.svm import SVR
+from pandas import read_csv
+from gensim import corpora
+from typing import List
+from tqdm import tqdm
 
-from src.keras_model import keras_model
+import torch.nn.functional as F
+import torch.optim as optim
+import torch.nn as nn
+import numpy as np
 
-from src.keras_model import *
-from src.text_preprocess import *
-from src.xgb_model import *
-from utils import *
-
-from src.embeddings_train.train_word2vec import document_preprocess
+import linalg
+import torch
+import nltk
+import csv
+import pdb
+import os
 
 stop_words = set(stopwords.words('english'))
-
 
 
 def mask_expression(text, start_offset, end_offset):
@@ -63,13 +53,17 @@ def predict_masked_tokens(text):
     unmasker = pipeline('fill-mask', model='roberta-base')
     return unmasker(text)[0]["token_str"]
 
+
 def main():
     model_option = ["KERAS_MODEL", "XGBREGRESSOR"][-1]
 
-    all_embedding_features = ["phrase", "target_word", "phrase_with_no_target_word", "predicted_target_word", "predicted_phrase", "phrase_special_tokenized"][0]
+    all_embedding_features = ["phrase", "target_word", "phrase_with_no_target_word", "predicted_target_word",
+                              "predicted_phrase", "phrase_special_tokenized"][0]
+
+    print(f"embedding feature: {all_embedding_features}")
 
     embedding_feature = "target_word"
-    embedding_model = "paper_features" #"tfidfvectorizer_char"
+    embedding_model = "paper_features"  # "tfidfvectorizer_char"
 
     embedding_models = ["tfidfvectorizer_char", "tfidfvectorizer_char_wb"]
     embedding_features = ["target_word", "target_word"]
@@ -83,7 +77,7 @@ def main():
         use_loaded_data = True
 
     print("Embedding model:", embedding_model)
-    if use_multiple_models == False:
+    if use_multiple_models is False:
         if use_loaded_data:
             X_train, y_train, X_test = load_data(embedding_feature=embedding_feature, embedding_model=embedding_model)
             if len(X_train.shape) == 1:
@@ -95,9 +89,13 @@ def main():
         if use_loaded_data:
             strategy = "stacking"
             embedding_model = "_".join(embedding_models) + "_" + strategy
-            X_train, y_train, X_test = load_multiple_models(embedding_models=embedding_models, embedding_features=embedding_features, strategy=strategy)
+            X_train, y_train, X_test = load_multiple_models(embedding_models=embedding_models,
+                                                            embedding_features=embedding_features,
+                                                            strategy=strategy)
         else:
-            X_train, y_train, X_test = embed_multiple_models(embedding_models=embedding_models, embedding_features=embedding_features, strategy=strategy)
+            X_train, y_train, X_test = embed_multiple_models(embedding_models=embedding_models,
+                                                             embedding_features=embedding_features,
+                                                             strategy=strategy)
 
     if model_option == "KERAS_MODEL":
         if embedding_model == "word2vec_trained" or embedding_model == "word2vec_trained_special":
@@ -108,7 +106,8 @@ def main():
         if embedding_model == "word2vec_trained" or embedding_model == "word2vec_trained_special":
             X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[-1]))
             X_test = np.reshape(X_test, (X_test.shape[0], X_test.shape[-1]))
-        labels = train_basic_model(X_train, y_train, X_test, embedding_feature=embedding_feature, embedding_model=embedding_model)
+        labels = train_basic_model(X_train, y_train, X_test, embedding_feature=embedding_feature,
+                                   embedding_model=embedding_model)
     else:
         raise Exception("Unknown model option")
 
