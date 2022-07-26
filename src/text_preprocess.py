@@ -10,7 +10,7 @@ from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.sr
     get_word_position_in_phrase, get_wup_avg_similarity, has_both_affixes, has_both_affixes_stem, has_prefix, \
     has_prefix_stem, has_suffix, has_suffix_stem, is_plural, is_singular, mean, median, word_frequency, \
     word_origin, word_polarity, word_tokenize
-from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.feature_extractor.train_diff_model \
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.train_diff_model \
     import mask_expression, predict_masked_tokens
 from transformers import AlbertTokenizer, TFAlbertModel
 from transformers import RobertaTokenizer, RobertaModel
@@ -19,7 +19,7 @@ from transformers import BertTokenizer, TFBertModel
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
-from src.embeddings_train.train_word2vec import document_preprocess
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.dataset_loader import document_preprocess
 from transformers import pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -62,7 +62,7 @@ import os
 textstat.set_lang("en")
 stop_words = set(stopwords.words('english'))
 PAD_TOKEN = "__PAD__"
-word2vec_model = Word2Vec.load("src/embeddings_train/word2vec.model")
+# word2vec_model = Word2Vec.load("src/embeddings_train/word2vec.model")
 
 numpy_arrays_path = "data/numpy_data"
 # word2vec_model = Word2Vec.load("src/embeddings_train/fasttext.model")

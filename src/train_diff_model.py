@@ -1,12 +1,12 @@
 from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.utils import load_data, \
     create_submission_file, load_multiple_models
-from used_repos.personal.Word_Complexity_Estimation.src.keras_model import keras_model
-from used_repos.personal.Word_Complexity_Estimation.src.text_preprocess import embed_multiple_models, embed_data
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.keras_model import keras_model
+# from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.text_preprocess import embed_multiple_models, embed_data
 from sklearn.model_selection import KFold, train_test_split, cross_val_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from used_repos.personal.Word_Complexity_Estimation.src.xgb_model import train_basic_model
-from src.embeddings_train.train_word2vec import document_preprocess
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.xgb_model import train_basic_model
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.dataset_loader import document_preprocess
 from torch.utils.data import Dataset, DataLoader, random_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from transformers import RobertaTokenizer, RobertaModel

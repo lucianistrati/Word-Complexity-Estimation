@@ -1,4 +1,4 @@
-from used_repos.personal.Word_Complexity_Estimation.src.feature_extractor import check_word_compounding, count_antonyms,\
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.feature_extractor import check_word_compounding, count_antonyms,\
     count_average_phonemes_per_pronounciation, count_capital_chars, count_capital_words, \
     count_definitions_average_characters_length, count_definitions_average_tokens_length, \
     count_definitions_characters_length, count_definitions_tokens_length, count_entailments, \
@@ -13,7 +13,7 @@ from used_repos.personal.Word_Complexity_Estimation.src.feature_extractor import
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
-from src.embeddings_train.train_word2vec import document_preprocess
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.dataset_loader import document_preprocess
 from transformers import RobertaTokenizer, RobertaModel, pipeline
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -49,7 +49,7 @@ import copy
 import csv
 import pdb
 import os
-from finetune_xgb import finetune_xgb
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.finetune_xgb import finetune_xgb
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn import neighbors
