@@ -1,6 +1,6 @@
-from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.feature_extractor import check_word_compounding, count_antonyms,\
-    count_average_phonemes_per_pronounciation, count_capital_chars, count_capital_words, \
-    count_definitions_average_characters_length, count_definitions_average_tokens_length, \
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.feature_extractor import \
+    check_word_compounding, count_antonyms, count_average_phonemes_per_pronounciation, count_capital_chars, \
+    count_capital_words, count_definitions_average_characters_length, count_definitions_average_tokens_length, \
     count_definitions_characters_length, count_definitions_tokens_length, count_entailments, \
     count_holonyms, count_hypernyms, count_hyponyms, count_letters, count_meronyms, count_part_holonyms, \
     count_part_meroynms, count_pronounciation_methods, count_punctuations, count_substance_holonyms, \

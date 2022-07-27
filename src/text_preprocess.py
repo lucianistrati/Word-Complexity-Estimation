@@ -62,10 +62,17 @@ import os
 textstat.set_lang("en")
 stop_words = set(stopwords.words('english'))
 PAD_TOKEN = "__PAD__"
-# word2vec_model = Word2Vec.load("src/embeddings_train/word2vec.model")
+
+try:
+    word2vec_model = Word2Vec.load("src/embeddings_train/word2vec.model")
+except FileNotFoundError:
+    print("No word2vec model in checkpoints!")
 
 numpy_arrays_path = "data/numpy_data"
-# word2vec_model = Word2Vec.load("src/embeddings_train/fasttext.model")
+try:
+    word2vec_model = Word2Vec.load("src/embeddings_train/fasttext.model")
+except FileNotFoundError:
+    print("No fasttext model in checkpoints!")
 
 # def document_preprocess(document):
 #     return document.lower().split()
