@@ -10,8 +10,6 @@ from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.sr
     get_word_position_in_phrase, get_wup_avg_similarity, has_both_affixes, has_both_affixes_stem, has_prefix, \
     has_prefix_stem, has_suffix, has_suffix_stem, is_plural, is_singular, mean, median, word_frequency, \
     word_origin, word_polarity, word_tokenize
-from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.train_diff_model \
-    import mask_expression, predict_masked_tokens
 from transformers import AlbertTokenizer, TFAlbertModel
 from transformers import RobertaTokenizer, RobertaModel
 from sentence_transformers import SentenceTransformer
@@ -80,6 +78,15 @@ except FileNotFoundError:
 # word2vec_model = Word2Vec.load("src/embeddings_train/abcnews_word2vec.model")
 # word2vec_model = Word2Vec.load("src/embeddings_train/abcnews_word2vec.model.syn1neg.npy")
 # word2vec_model = Word2Vec.load("src/embeddings_train/abcnews_word2vec.model.wv.vectors.npy")
+
+
+def mask_expression(text, start_offset, end_offset):
+    return text[:start_offset] + "<mask>" + text[end_offset:]
+
+
+def predict_masked_tokens(text):
+    unmasker = pipeline('fill-mask', model='roberta-base')
+    return unmasker(text)[0]["token_str"]
 
 
 def embed_text(text, embedding_model: str = "word2vec_trained", phrase="", start_offset="", end_offset=""):
@@ -191,9 +198,6 @@ def embed_data(embedding_feature: str, embedding_model: str):
             if embedding_feature == "phrase_with_no_target_word":
                 start_offset = int(row[2])
                 end_offset = int(row[3])
-                # print(row[1])
-                # import pdb
-                # pdb.set_trace()
                 X_train.append(embed_text(row[1][:start_offset] + row[1][end_offset:], embedding_model=embedding_model))
             elif embedding_feature in ["phrase", "target_word"]:
                 phrase = row[1]
@@ -201,30 +205,9 @@ def embed_data(embedding_feature: str, embedding_model: str):
                 end_offset = int(row[3])
                 outputs = embed_text(row[column_idx], embedding_model=embedding_model, phrase=phrase,
                                      start_offset=start_offset, end_offset=end_offset)
-                # vecs = []
-                # res_types = []
-                # final_vecs = []
-                # for word in word_tokenize(row[column_idx]):
-                #     res_type, vec = get_embedding_word(word)
-                #     res_types.append(res_type)
-                #     vecs.append(vec)
-                # if "good" in res_types:
-                #     for res_type in res_types:
-                #         if res_type == "good":
-                #             final_vecs.append(vec)
-                # if len(final_vecs):
-                #     vecs = final_vecs
-                # vecs = np.mean(vecs, axis=0)
-                # assert vecs.shape == (1,10)
                 if embedding_model == "paper_features":
-                    # for elem in vecs[0]:
-                    #     outputs[0].append(elem)
-                    # print(np.array(outputs[0]).shape)
-                    # print(np.array(outputs[0]).astype(float))
                     X_train.append(np.array(outputs[0]))
-                    # print(np.array(X_train).shape)
                     if outputs[1] is not None:
-                        # print(outputs[1], type(outputs[1]))
                         X_train_str.append(outputs[1])
                 else:
                     X_train.append(outputs)
