@@ -48,14 +48,14 @@ def keras_model(X_train, y_train, X_test):
 
     # defining the regressor
     regressor = Sequential()
-    regressor.add(Dense(n_hiddens, input_dim=input_dimension, activation='relu'))
-    regressor.add(Dense(n_hiddens, activation='relu'))
-    regressor.add(Dense(n_hiddens, activation='relu'))
-    regressor.add(Dense(n_hiddens, activation='relu'))
+    regressor.add(Dense(n_hiddens, input_dim=input_dimension, activation="relu"))
+    regressor.add(Dense(n_hiddens, activation="relu"))
+    regressor.add(Dense(n_hiddens, activation="relu"))
+    regressor.add(Dense(n_hiddens, activation="relu"))
     regressor.add(Dense(n_outputs))
 
     # compiling the regressor
-    regressor.compile(loss='mean_absolute_error', optimizer='adam')
+    regressor.compile(loss="mean_absolute_error", optimizer="adam")
 
     # fitting the regressor
     regressor.fit(X_train, y_train, epochs=num_epochs, batch_size=batch_size)

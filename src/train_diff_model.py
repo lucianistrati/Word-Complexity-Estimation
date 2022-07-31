@@ -44,7 +44,7 @@ import csv
 import pdb
 import os
 
-stop_words = set(stopwords.words('english'))
+stop_words = set(stopwords.words("english"))
 
 
 def mask_expression(text, start_offset, end_offset):
@@ -52,7 +52,7 @@ def mask_expression(text, start_offset, end_offset):
 
 
 def predict_masked_tokens(text):
-    unmasker = pipeline('fill-mask', model='roberta-base')
+    unmasker = pipeline("fill-mask", model="roberta-base")
     return unmasker(text)[0]["token_str"]
 
 
@@ -117,5 +117,5 @@ def main():
     create_submission_file(ids, labels)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

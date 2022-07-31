@@ -56,7 +56,7 @@ numpy_arrays_path = "data/numpy_data"
 def create_submission_file(ids, labels, imputer_strategy: str = "max"):
     submission_file_path = "data/submission.txt"
 
-    with open(submission_file_path, 'r+') as f:
+    with open(submission_file_path, "r+") as f:
         f.truncate(0)
 
     with open(submission_file_path, "a") as f:

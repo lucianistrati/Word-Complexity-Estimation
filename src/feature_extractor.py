@@ -462,7 +462,7 @@ def count_punctuations(text):
 
 def get_word_frequency(target, tokens=None):
     tokens = word_tokenize(target) if tokens is None else tokens
-    return mean([word_frequency(token, 'en') for token in tokens])
+    return mean([word_frequency(token, "en") for token in tokens])
 
 
 def main():

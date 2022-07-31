@@ -56,9 +56,8 @@ import csv
 import pdb
 import os
 
-
 textstat.set_lang("en")
-stop_words = set(stopwords.words('english'))
+stop_words = set(stopwords.words("english"))
 PAD_TOKEN = "__PAD__"
 
 try:
@@ -71,6 +70,7 @@ try:
     word2vec_model = Word2Vec.load("src/embeddings_train/fasttext.model")
 except FileNotFoundError:
     print("No fasttext model in checkpoints!")
+
 
 # def document_preprocess(document):
 #     return document.lower().split()
@@ -85,34 +85,85 @@ def mask_expression(text, start_offset, end_offset):
 
 
 def predict_masked_tokens(text):
-    unmasker = pipeline('fill-mask', model='roberta-base')
+    unmasker = pipeline("fill-mask", model="roberta-base")
     return unmasker(text)[0]["token_str"]
+
+
+def launch_embedder(embedding_model: str = "robert-base"):
+    """
+
+    :param embedding_model:
+    :return:
+    """
+    AVAILABLE_EMBEDDING_MODELS = ["roberta-base", "all-mpnet-base-v2",
+                                  "multi-qa-mpnet-base-dot-v1", "roberta-large", "bert-large-uncased",
+                                  "albert-base-v2", "all-distilroberta-v1", "all-MiniLM-L12-v2", "all-MiniLM-L6-v2",
+                                  "word2vec_trained"]
+    if embedding_model == "roberta-base":
+        roberta_tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
+        roberta_model = RobertaModel.from_pretrained("roberta-base")
+        return (roberta_tokenizer, roberta_model)
+    elif embedding_model == "all-mpnet-base-v2":
+        sent_transf_model = SentenceTransformer("all-mpnet-base-v2")
+        return sent_transf_model
+    elif embedding_model == "multi-qa-mpnet-base-dot-v1":
+        sent_transf_model_multi_qa = SentenceTransformer("multi-qa-mpnet-base-dot-v1")
+        return sent_transf_model_multi_qa
+    elif embedding_model == "roberta-large":
+        roberta_large_tokenizer = RobertaTokenizer.from_pretrained("roberta-large")
+        roberta_large_model = RobertaModel.from_pretrained("roberta-large")
+        return (roberta_large_tokenizer, roberta_large_model)
+    elif embedding_model == "bert-large-uncased":
+        bert_large_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
+        bert_large_model = TFBertModel.from_pretrained("bert-large-uncased")
+        return (bert_large_tokenizer, bert_large_model)
+    elif embedding_model == "albert-base-v2":
+        albert_tokenizer = AlbertTokenizer.from_pretrained("albert-base-v2")
+        albert_model = TFAlbertModel.from_pretrained("albert-base-v2")
+        return (albert_tokenizer, albert_model)
+    elif embedding_model == "all-distilroberta-v1":
+        sent_transf_model_distil_roberta = SentenceTransformer("all-distilroberta-v1")
+        return sent_transf_model_distil_roberta
+    elif embedding_model == "all-MiniLM-L12-v2":
+        all_minimlm_l12_model = SentenceTransformer("all-MiniLM-L12-v2")
+        return all_minimlm_l12_model
+    elif embedding_model == "all-MiniLM-L6-v2":
+        all_minimlm_l6_model = SentenceTransformer("all-MiniLM-L6-v2")
+        return all_minimlm_l6_model
+    elif embedding_model == "word2vec_trained":
+        pass
+    else:
+        raise Exception(f"Wrong embedding_model given: {embedding_model}! Please select from {AVAILABLE_EMBEDDING_MODELS}")
 
 
 def embed_text(text, embedding_model: str = "word2vec_trained", phrase="", start_offset="", end_offset=""):
     """This function embedds the text given using an embedding model, it might also use the phrase, start_offset or the
     end_offset for certain embeddings"""
-    if embedding_model == "roberta":
+    AVAILABLE_EMBEDDING_MODELS = ["roberta-base", "all-mpnet-base-v2",
+                                  "multi-qa-mpnet-base-dot-v1", "roberta-large", "bert-large-uncased",
+                                  "albert-base-v2", "all-distilroberta-v1", "all-MiniLM-L12-v2", "all-MiniLM-L6-v2",
+                                  "word2vec_trained"]
+    if embedding_model == "roberta-base":
         roberta_tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
         roberta_model = RobertaModel.from_pretrained("roberta-base")
         encoded_input = roberta_tokenizer(text, return_tensors="pt")
         output = roberta_model(**encoded_input)
         return torch.reshape(output.pooler_output, shape=(output.pooler_output.shape[1],)).detach().numpy()
-    elif embedding_model == "sentence_transformer":
+    elif embedding_model == "all-mpnet-base-v2":
         sent_transf_model = SentenceTransformer("all-mpnet-base-v2")
         embedding = sent_transf_model.encode(text)
         return embedding
-    elif embedding_model == "sentence_transformer_multi_qa":
+    elif embedding_model == "multi-qa-mpnet-base-dot-v1":
         sent_transf_model_multi_qa = SentenceTransformer("multi-qa-mpnet-base-dot-v1")
         embedding = sent_transf_model_multi_qa.encode(text)
         return embedding
-    elif embedding_model == "roberta_large":
+    elif embedding_model == "roberta-large":
         roberta_large_tokenizer = RobertaTokenizer.from_pretrained("roberta-large")
         roberta_large_model = RobertaModel.from_pretrained("roberta-large")
         encoded_input = roberta_large_tokenizer(text, return_tensors="pt")
         output = roberta_large_model(**encoded_input)
         return torch.reshape(output.pooler_output, shape=(output.pooler_output.shape[1],)).detach().numpy()
-    elif embedding_model == "bert_large":
+    elif embedding_model == "bert-large-uncased":
         bert_large_tokenizer = BertTokenizer.from_pretrained("bert-large-uncased")
         bert_large_model = TFBertModel.from_pretrained("bert-large-uncased")
         encoded_input = bert_large_tokenizer(text, return_tensors="tf")
@@ -124,15 +175,15 @@ def embed_text(text, embedding_model: str = "word2vec_trained", phrase="", start
         encoded_input = albert_tokenizer(text, return_tensors="tf")
         output = albert_model(**encoded_input)
         return np.reshape(np.array(output.pooler_output), newshape=(output.pooler_output.shape[1],))
-    elif embedding_model == "roberta_distil":
+    elif embedding_model == "all-distilroberta-v1":
         sent_transf_model_distil_roberta = SentenceTransformer("all-distilroberta-v1")
         embedding = sent_transf_model_distil_roberta.encode(text)
         return embedding
-    elif embedding_model == "all_minimlm_l12":
+    elif embedding_model == "all-MiniLM-L12-v2":
         all_minimlm_l12_model = SentenceTransformer("all-MiniLM-L12-v2")
         embedding = all_minimlm_l12_model.encode(text)
         return embedding
-    elif embedding_model == "all_minimlm_l6":
+    elif embedding_model == "all-MiniLM-L6-v2":
         all_minimlm_l6_model = SentenceTransformer("all-MiniLM-L6-v2")
         embedding = all_minimlm_l6_model.encode(text)
         return embedding
@@ -160,6 +211,8 @@ def embed_text(text, embedding_model: str = "word2vec_trained", phrase="", start
         except KeyError:
             vector = np.random.rand(1, 300)
         return vector
+    else:
+        raise Exception(f"Wrong embedding_model given: {embedding_model}! Please select from {AVAILABLE_EMBEDDING_MODELS}")
 
 
 def embed_data(embedding_feature: str, embedding_model: str):
@@ -294,7 +347,7 @@ def embed_data(embedding_feature: str, embedding_model: str):
 
     print(X_train.shape, X_test.shape, "PRE CONCAT WITH STR FEATURES")
     if len(X_test_str) and len(X_train_str):
-        cv = TfidfVectorizer(analyzer='char')
+        cv = TfidfVectorizer(analyzer="char")
         X_train_str = cv.fit_transform(X_train_str).toarray()
         X_test_str = cv.transform(X_test_str).toarray()
 
@@ -388,7 +441,7 @@ def get_part_of_speech(sentence, tokens=None):
 
 
 def get_good_vectorizer():
-    return TfidfVectorizer(analyzer='char_wb', n_gram_range=(1, 4))
+    return TfidfVectorizer(analyzer="char_wb", n_gram_range=(1, 4))
 
 
 def spans(phrase):
@@ -524,7 +577,7 @@ def main():
     end_offset = 56 + len("Wednesday")
     print(phrase[start_offset: end_offset])
 
-    for synset in wn.synsets('flexed'):
+    for synset in wn.synsets("flexed"):
         print(synset)
         print(dir(synset))
         for lemma in synset.lemmas():
@@ -532,5 +585,5 @@ def main():
     # print(get_context_tokens(phrase, start_offset, end_offset))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

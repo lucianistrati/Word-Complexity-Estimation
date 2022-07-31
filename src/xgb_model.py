@@ -81,7 +81,7 @@ def train_basic_model(X_train, y_train, X_test, embedding_feature: str = "target
     def cross_val_func(regressor, X_train, y_train):
         kfolder5 = KFold(n_splits=5, shuffle=False)
         print(X_train.shape)
-        scores = cross_val_score(regressor, X_train, y_train, scoring='neg_mean_absolute_error', cv=kfolder5, n_jobs=-1)
+        scores = cross_val_score(regressor, X_train, y_train, scoring="neg_mean_absolute_error", cv=kfolder5, n_jobs=-1)
         return [score * (-1) for score in scores]
 
     regressors_list = [RandomForestRegressor(random_state=100), LinearRegression(), SVR()]

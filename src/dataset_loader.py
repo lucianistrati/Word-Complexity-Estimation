@@ -16,7 +16,7 @@ def load_wce_dataset():
 def load_abcnews_dataset():
     arr = np.load(file="data/wce_dataset.npy", allow_pickle=True)
     df = pd.read_csv("data/abcnews-date-text.csv")
-    return df['headline_text'].to_list() + [a for a in arr]
+    return df["headline_text"].to_list() + [a for a in arr]
 
 
 def main():
@@ -50,5 +50,5 @@ def main():
         f.write("\n".join(test))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
