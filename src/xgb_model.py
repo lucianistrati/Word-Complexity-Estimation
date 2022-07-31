@@ -117,3 +117,11 @@ SVR: TEST RESULT:  0.07623491324164598
 XGBR: TEST RESULT:  0.05770197753634105
 
 """
+
+
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()
