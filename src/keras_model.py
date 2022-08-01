@@ -76,7 +76,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-"""
-ST RESULT:  0.08734544425405025 -> keras
-
-"""

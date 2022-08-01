@@ -113,7 +113,7 @@ def main():
     else:
         raise Exception("Unknown model option")
 
-    ids = list(range(14003, 15767))
+    ids = list(range(14_003, 15_767))
     create_submission_file(ids, labels)
 
 

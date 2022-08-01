@@ -8,7 +8,7 @@ from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.sr
     custom_wup_similarity, get_average_syllable_count, get_base_word_pct, get_base_word_pct_stem, get_num_pos_tags, \
     get_phrase_len, get_phrase_num_tokens, get_target_phrase_ratio, get_total_syllable_count, get_word_frequency, \
     get_word_position_in_phrase, get_wup_avg_similarity, has_both_affixes, has_both_affixes_stem, has_prefix, \
-    has_prefix_stem, has_suffix, has_suffix_stem, is_plural, is_singular, main, mean, median, word_frequency, \
+    has_prefix_stem, has_suffix, has_suffix_stem, is_plural, is_singular, mean, median, word_frequency, \
     word_origin, word_polarity, word_tokenize
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -88,13 +88,7 @@ def train_basic_model(X_train, y_train, X_test, embedding_feature: str = "target
     regressor_names = ["random forest", "linear regressor", "svr"]
     for (regressor, name) in list(zip(regressors_list, regressor_names)):
         print(name, ":", cross_val_func(regressor, X_train, y_train))
-    """
-    Results of cross validation:
-    random forest : [0.062240533679206164, 0.05939914829907854, 0.061634080984518023, 0.05774259217534336, 0.06274576765079065]
-    linear regressor : [0.1117310780087325, 0.10811122489629153, 0.10634572244232848, 0.11075799032015514, 0.11112644831981833]
-    svr : [0.12918072212066153, 0.12330485614172973, 0.12103617748228726, 0.12373396212906405, 0.1251740540981331]
-    """
-    # 0.05169
+
     print(X_train.shape, X_test.shape, X_train.dtype, X_test.dtype)
 
     X_train = data_scaler.fit_transform(X_train)
@@ -110,13 +104,6 @@ def train_basic_model(X_train, y_train, X_test, embedding_feature: str = "target
     # y_pred = np.clip(y_pred, a_min=0.0, a_max=1.0)
     # print("MAE:",  mean_absolute_error(y_validation, y_pred))
     return label_scaler.inverse_transform(regressor.predict(X_test))
-
-
-"""
-SVR: TEST RESULT:  0.07623491324164598
-XGBR: TEST RESULT:  0.05770197753634105
-
-"""
 
 
 def main():
