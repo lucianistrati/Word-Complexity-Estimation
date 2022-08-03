@@ -1,4 +1,4 @@
-from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.dataset_loader import \
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.dataset_loader import \
     document_preprocess, load_wce_dataset
 from gensim.models import FastText
 

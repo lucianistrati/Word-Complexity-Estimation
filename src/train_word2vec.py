@@ -1,4 +1,5 @@
-from used_repos.personal.Word_Complexity_Estimation.src.embeddings_train.dataset_loader import load_wce_dataset
+from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.dataset_loader \
+    import load_wce_dataset
 from gensim.test.utils import common_texts
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
