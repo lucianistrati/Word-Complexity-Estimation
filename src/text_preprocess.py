@@ -214,33 +214,16 @@ def embed_text(text, embedding_model: str = "word2vec_trained", phrase="", start
     else:
         raise Exception(f"Wrong embedding_model given: {embedding_model}! Please select from {AVAILABLE_EMBEDDING_MODELS}")
 
+TRAIN_COLUMNS = ["id", "phrase", "start_offset", "end_offset", "target_word", "native_annotators",
+                 "non_native_annotators", "difficult_native_annotators", "difficult_non_native_annotators", "label"]
 
-def embed_data(embedding_feature: str, embedding_model: str):
-    """This function embedds the data based on a chosen feature to be emebedded/chosen set of rules to be applied
-    over the feature with a certain alias and then an embedding model might be used to pursue the feature extraction"""
-    train_path = "data/train_full.txt"
-    test_path = "data/test.txt"
-    if embedding_feature == "phrase":
-        column_idx = 1
-    elif embedding_feature == "target_word":
-        column_idx = 4
+TEST_COLUMNS = ["id", "phrase", "start_offset", "end_offset", "target_word", "native_annotators",
+                 "non_native_annotators"]
 
-    train_columns = ["id", "phrase", "start_offset", "end_offset", "target_word",
-                     "native_annotators", "non_native_annotators", "difficult_native_annotators",
-                     "difficult_non_native_annotators", "label"]
-    test_columns = ["id", "phrase", "start_offset", "end_offset", "target_word",
-                    "native_annotators", "non_native_annotators"]
 
-    print(len(train_columns) == len(test_columns))
-
-    print("Embedding feature:", embedding_feature)
-
-    X_train, y_train, X_test = [], [], []
-
-    datapoints_limit = -1
-
-    X_train_str = []
-    X_test_str = []
+def read_train_dataset(train_path: str):
+    X_train = []
+    Y_train = []
     with open(train_path) as f:
         reader = csv.reader(f, delimiter="\t")
         data = list(reader)
@@ -277,13 +260,10 @@ def embed_data(embedding_feature: str, embedding_model: str):
                 text_ = row[1][:start_offset].lower().split() + [row[4].lower()] + row[1][end_offset:].lower().split()
                 X_train.append(embed_text(text_, embedding_model=embedding_model))
             y_train.append(float(row[8]) / float(row[6]))
+    return X_train, y_train
 
-    X_train, y_train = np.array(X_train), np.array(y_train)
 
-    y_train_filename = "y_train_" + embedding_feature + "_" + embedding_model + "_non_native.npy"
-    y_train_filepath = os.path.join(numpy_arrays_path, y_train_filename)
-    np.save(file=y_train_filepath, arr=y_train)
-
+def read_test_dataset(test_path):
     with open(test_path) as f:
         reader = csv.reader(f, delimiter="\t")
         data = list(reader)
@@ -301,24 +281,7 @@ def embed_data(embedding_feature: str, embedding_model: str):
                 end_offset = int(row[3])
                 outputs = embed_text(row[column_idx], embedding_model=embedding_model, phrase=phrase,
                                      start_offset=start_offset, end_offset=end_offset)
-                # vecs = []
-                # res_types = []
-                # final_vecs = []
-                # for word in word_tokenize(row[column_idx]):
-                #     res_type, vec = get_embedding_word(word)
-                #     res_types.append(res_type)
-                #     vecs.append(vec)
-                # if "good" in res_types:
-                #     for res_type in res_types:
-                #         if res_type == "good":
-                #             final_vecs.append(vec)
-                # if len(final_vecs):
-                #     vecs = final_vecs
-                # vecs = np.mean(vecs, axis=0)
-                # assert vecs.shape == (1,10)
                 if embedding_model == "paper_features":
-                    # for elem in vecs[0]:
-                    #     outputs[0].append(elem)
                     X_test.append(np.array(outputs[0], dtype=np.float))
                     if outputs[1] is not None:
                         X_test_str.append(outputs[1])
@@ -334,16 +297,38 @@ def embed_data(embedding_feature: str, embedding_model: str):
             elif embedding_feature == "phrase_special_tokenized":
                 text_ = row[1][:start_offset].lower().split() + [row[4].lower()] + row[1][end_offset:].lower().split()
                 X_test.append(embed_text(text_, embedding_model=embedding_model))
+    return X_test
 
+
+def embed_data(embedding_feature: str, embedding_model: str):
+    """This function embedds the data based on a chosen feature to be emebedded/chosen set of rules to be applied
+    over the feature with a certain alias and then an embedding model might be used to pursue the feature extraction"""
+    train_path = "data/train_full.txt"
+    test_path = "data/test.txt"
+    if embedding_feature == "phrase":
+        column_idx = 1
+    elif embedding_feature == "target_word":
+        column_idx = 4
+
+    print("Embedding feature:", embedding_feature)
+
+    X_train, y_train, X_test = [], [], []
+
+    datapoints_limit = -1
+
+    X_train_str = []
+    X_test_str = []
+
+    X_train, y_train = read_train_dataset(train_path)
+
+    X_train, y_train = np.array(X_train), np.array(y_train)
+
+    y_train_filename = "y_train_" + embedding_feature + "_" + embedding_model + "_non_native.npy"
+    y_train_filepath = os.path.join(numpy_arrays_path, y_train_filename)
+    np.save(file=y_train_filepath, arr=y_train)
+
+    X_test = read_test_dataset(test_path)
     X_test = np.array(X_test)
-
-    # corpus = [x for x in X_train] + [x for x in X_test]
-    # corpus = list(set(corpus))
-    # print(len(corpus))
-    # print(corpus[0])
-    # print(corpus[-1])
-    # np.save(file="data/wce_dataset.npy", arr=np.array(corpus), allow_pickle=True)
-    # exit(0)
 
     print(X_train.shape, X_test.shape, "PRE CONCAT WITH STR FEATURES")
     if len(X_test_str) and len(X_train_str):
@@ -351,24 +336,14 @@ def embed_data(embedding_feature: str, embedding_model: str):
         X_train_str = cv.fit_transform(X_train_str).toarray()
         X_test_str = cv.transform(X_test_str).toarray()
 
-        print(X_train_str.shape, X_test_str.shape)
-
         X_train_str = X_train_str.astype(float)
         X_test_str = X_test_str.astype(float)
 
         X_train = X_train.astype(float)
         X_test = X_test.astype(float)
 
-        print(X_train_str.dtype)
-        print(X_test_str.dtype)
-
-        print(X_train.dtype)
-        print(X_test.dtype)
-
         X_train = np.hstack((X_train, X_train_str))
         X_test = np.hstack((X_test, X_test_str))
-
-    print(X_train.shape, X_test.shape, "POST CONCAT WITH STR FEATURES")
 
     tfidfvectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(1, 4))
 
