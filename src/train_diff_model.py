@@ -47,10 +47,22 @@ stop_words = set(stopwords.words("english"))
 
 
 def mask_expression(text, start_offset, end_offset):
+    """
+
+    :param text:
+    :param start_offset:
+    :param end_offset:
+    :return:
+    """
     return text[:start_offset] + "<mask>" + text[end_offset:]
 
 
 def predict_masked_tokens(text):
+    """
+
+    :param text:
+    :return:
+    """
     unmasker = pipeline("fill-mask", model="roberta-base")
     return unmasker(text)[0]["token_str"]
 

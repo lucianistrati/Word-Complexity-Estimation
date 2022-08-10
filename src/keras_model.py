@@ -40,6 +40,13 @@ import os
 
 
 def keras_model(X_train, y_train, X_test):
+    """
+
+    :param X_train:
+    :param y_train:
+    :param X_test:
+    :return:
+    """
     n_hiddens = 512
     input_dimension = X_train[0].shape[0]
     num_epochs = 2

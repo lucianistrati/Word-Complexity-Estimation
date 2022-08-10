@@ -54,6 +54,13 @@ numpy_arrays_path = "data/numpy_data"
 
 
 def create_submission_file(ids, labels, imputer_strategy: str = "max"):
+    """
+
+    :param ids:
+    :param labels:
+    :param imputer_strategy:
+    :return:
+    """
     submission_file_path = "data/submission.txt"
 
     with open(submission_file_path, "r+") as f:
@@ -75,6 +82,12 @@ def create_submission_file(ids, labels, imputer_strategy: str = "max"):
 
 
 def load_data(embedding_feature: str = "target_word", embedding_model: str = "roberta"):
+    """
+
+    :param embedding_feature:
+    :param embedding_model:
+    :return:
+    """
     X_train_filepath = os.path.join(numpy_arrays_path, "X_train_" + embedding_feature + "_" + embedding_model + ".npy")
     X_train = np.load(file=X_train_filepath, allow_pickle=True)
     y_train_filepath = os.path.join(numpy_arrays_path, "y_train_" + embedding_feature + "_" + embedding_model + ".npy")
@@ -88,6 +101,13 @@ def load_data(embedding_feature: str = "target_word", embedding_model: str = "ro
 
 
 def load_multiple_models(embedding_models: List[str], embedding_features: List[str], strategy: str = "averaging"):
+    """
+
+    :param embedding_models:
+    :param embedding_features:
+    :param strategy:
+    :return:
+    """
     X_train_list = []
     y_train_list = []
     X_test_list = []

@@ -14,6 +14,11 @@ import pdb
 
 
 def document_preprocess(document):
+    """
+
+    :param document:
+    :return:
+    """
     return word_tokenize(document)
 
 

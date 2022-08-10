@@ -81,10 +81,22 @@ except FileNotFoundError:
 
 
 def mask_expression(text, start_offset, end_offset):
+    """
+
+    :param text:
+    :param start_offset:
+    :param end_offset:
+    :return:
+    """
     return text[:start_offset] + "<mask>" + text[end_offset:]
 
 
 def predict_masked_tokens(text):
+    """
+
+    :param text:
+    :return:
+    """
     unmasker = pipeline("fill-mask", model="roberta-base")
     return unmasker(text)[0]["token_str"]
 
@@ -214,16 +226,23 @@ def embed_text(text, embedding_model: str = "word2vec_trained", phrase="", start
     else:
         raise Exception(f"Wrong embedding_model given: {embedding_model}! Please select from {AVAILABLE_EMBEDDING_MODELS}")
 
+
 TRAIN_COLUMNS = ["id", "phrase", "start_offset", "end_offset", "target_word", "native_annotators",
                  "non_native_annotators", "difficult_native_annotators", "difficult_non_native_annotators", "label"]
 
 TEST_COLUMNS = ["id", "phrase", "start_offset", "end_offset", "target_word", "native_annotators",
-                 "non_native_annotators"]
+                "non_native_annotators"]
 
 
-def read_train_dataset(train_path: str):
+def read_train_dataset(train_path: str, embedding_model, embedding_feature, column_idx, datapoints_limit):
+    """
+
+    :param train_path:
+    :return:
+    """
     X_train = []
-    Y_train = []
+    X_train_str = []
+    y_train = []
     with open(train_path) as f:
         reader = csv.reader(f, delimiter="\t")
         data = list(reader)
@@ -263,7 +282,14 @@ def read_train_dataset(train_path: str):
     return X_train, y_train
 
 
-def read_test_dataset(test_path):
+def read_test_dataset(test_path, embedding_model, embedding_feature, column_idx, datapoints_limit):
+    """
+
+    :param test_path:
+    :return:
+    """
+    X_test = []
+    X_test_str = []
     with open(test_path) as f:
         reader = csv.reader(f, delimiter="\t")
         data = list(reader)
@@ -309,6 +335,9 @@ def embed_data(embedding_feature: str, embedding_model: str):
         column_idx = 1
     elif embedding_feature == "target_word":
         column_idx = 4
+    else:
+        raise Exception(f"Wrong embedding_feature given: {embedding_feature}!")
+    print(column_idx)
 
     print("Embedding feature:", embedding_feature)
 
@@ -316,10 +345,12 @@ def embed_data(embedding_feature: str, embedding_model: str):
 
     datapoints_limit = -1
 
+    print(datapoints_limit)
+    print(len(X_train), len(y_train), len(X_test))
     X_train_str = []
     X_test_str = []
 
-    X_train, y_train = read_train_dataset(train_path)
+    X_train, y_train = read_train_dataset(train_path, embedding_model)
 
     X_train, y_train = np.array(X_train), np.array(y_train)
 
@@ -327,7 +358,7 @@ def embed_data(embedding_feature: str, embedding_model: str):
     y_train_filepath = os.path.join(numpy_arrays_path, y_train_filename)
     np.save(file=y_train_filepath, arr=y_train)
 
-    X_test = read_test_dataset(test_path)
+    X_test = read_test_dataset(test_path, embedding_model, embedding_feature)
     X_test = np.array(X_test)
 
     print(X_train.shape, X_test.shape, "PRE CONCAT WITH STR FEATURES")
@@ -370,6 +401,12 @@ def embed_data(embedding_feature: str, embedding_model: str):
 
 
 def count_word_senses(word, tokens=None):
+    """
+
+    :param word:
+    :param tokens:
+    :return:
+    """
     tokens = word_tokenize(word) if tokens is None else tokens
     ans = []
     for token in tokens:
@@ -380,15 +417,30 @@ def count_word_senses(word, tokens=None):
 
 
 def count_vowels(word):
+    """
+
+    :param word:
+    :return:
+    """
     return len([c for c in word if c in "aeiou"])
 
 
 def count_consonants(word):
+    """
+
+    :param word:
+    :return:
+    """
     consonants = "bcdfghjklmnpqrstvwxyz"
     return len([c for c in word if c in consonants])
 
 
 def count_double_consonants(word):
+    """
+
+    :param word:
+    :return:
+    """
     consonants = "bcdfghjklmnpqrstvwxyz"
     cnt = 0
     for i in range(len(word) - 1):
@@ -398,43 +450,92 @@ def count_double_consonants(word):
 
 
 def get_double_consonants_pct(word):
+    """
+
+    :param word:
+    :return:
+    """
     return count_double_consonants(word) / len(word)
 
 
 def get_vowel_pct(word):
+    """
+
+    :param word:
+    :return:
+    """
     return count_vowels(word) / len(word)
 
 
 def get_consonants_pct(word):
+    """
+
+    :param word:
+    :return:
+    """
     return count_consonants(word) / len(word)
 
 
 def get_part_of_speech(sentence, tokens=None):
+    """
+
+    :param sentence:
+    :param tokens:
+    :return:
+    """
     tokens = word_tokenize(sentence) if tokens is None else tokens
     pos_tags = nltk.pos_tag(tokens)
     return " ".join([pos_tag[1] for pos_tag in pos_tags])
 
 
 def get_good_vectorizer():
+    """
+
+    :return:
+    """
     return TfidfVectorizer(analyzer="char_wb", n_gram_range=(1, 4))
 
 
 def spans(phrase):
+    """
+
+    :param phrase:
+    :return:
+    """
     return list(twt().span_tokenize(phrase))
 
 
 def count_sws(text, tokens=None):
+    """
+
+    :param text:
+    :param tokens:
+    :return:
+    """
     if tokens is None:
         tokens = word_tokenize(text)
     return len([tok for tok in tokens if tok.lower() in stop_words])
 
 
 def get_sws_pct(text):
+    """
+
+    :param text:
+    :return:
+    """
     tokens = word_tokenize(text)
     return count_sws(text, tokens) / len(tokens)
 
 
 def get_context_tokens(phrase, start_offset, end_offset, context_size=1):  # try 2
+    """
+
+    :param phrase:
+    :param start_offset:
+    :param end_offset:
+    :param context_size:
+    :return:
+    """
     tokens = [PAD_TOKEN for _ in range(context_size)] + nltk.word_tokenize(phrase) + [PAD_TOKEN for _ in range(context_size)]
     tokens_spans = [(0, 0) for _ in range(context_size)] + spans(phrase) + [(0, 0) for _ in range(context_size)]
     for i, (l, r) in enumerate(tokens_spans):
@@ -444,6 +545,13 @@ def get_context_tokens(phrase, start_offset, end_offset, context_size=1):  # try
 
 
 def embed_multiple_models(embedding_models: List[str], embedding_features: List[str], strategy: str = "averaging"):
+    """
+
+    :param embedding_models:
+    :param embedding_features:
+    :param strategy:
+    :return:
+    """
     X_train_list = []
     y_train_list = []
     X_test_list = []

@@ -74,11 +74,27 @@ from sklearn.linear_model import Lasso, ElasticNet, BayesianRidge, HuberRegresso
 
 
 def train_basic_model(X_train, y_train, X_test, embedding_feature: str = "target_word", embedding_model: str = "roberta"):
+    """
+
+    :param X_train:
+    :param y_train:
+    :param X_test:
+    :param embedding_feature:
+    :param embedding_model:
+    :return:
+    """
     data_scaler = StandardScaler()
     label_scaler = StandardScaler()
     regressor = XGBRegressor(eval_metric=mean_absolute_error, max_depth=10, min_child_weight=1)
 
     def cross_val_func(regressor, X_train, y_train):
+        """
+
+        :param regressor:
+        :param X_train:
+        :param y_train:
+        :return:
+        """
         kfolder5 = KFold(n_splits=5, shuffle=False)
         print(X_train.shape)
         scores = cross_val_score(regressor, X_train, y_train, scoring="neg_mean_absolute_error", cv=kfolder5, n_jobs=-1)

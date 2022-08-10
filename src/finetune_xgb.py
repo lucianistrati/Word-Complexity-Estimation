@@ -40,6 +40,14 @@ import os
 
 
 def train_model(regressor, X_train, y_train, label_scaler):
+    """
+
+    :param regressor:
+    :param X_train:
+    :param y_train:
+    :param label_scaler:
+    :return:
+    """
     X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.1)
     regressor.fit(X_train, y_train)
     y_pred = label_scaler.inverse_transform(regressor.predict(X_validation))
@@ -47,6 +55,14 @@ def train_model(regressor, X_train, y_train, label_scaler):
 
 
 def finetune_xgb(X_train, y_train, X_test, label_scaler):
+    """
+
+    :param X_train:
+    :param y_train:
+    :param X_test:
+    :param label_scaler:
+    :return:
+    """
     max_depth_values = [5, 9, 10, 14]
     min_child_weight_values = [1, 5, 6, 10]
 
