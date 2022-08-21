@@ -3,6 +3,7 @@ from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.sr
 from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.keras_model import keras_model
 from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.text_preprocess import \
     embed_multiple_models, embed_data
+from typing import Dict, List, Set, Tuple, Optional, Any, Callable, NoReturn, Union, Mapping, Sequence, Iterable
 from sklearn.model_selection import KFold, train_test_split, cross_val_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -28,7 +29,6 @@ from keras.layers import Dense
 from sklearn.svm import SVR
 from pandas import read_csv
 from gensim import corpora
-from typing import List
 from tqdm import tqdm
 
 import torch.nn.functional as F

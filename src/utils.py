@@ -10,6 +10,7 @@ from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.sr
     get_word_position_in_phrase, get_wup_avg_similarity, has_both_affixes, has_both_affixes_stem, has_prefix, \
     has_prefix_stem, has_suffix, has_suffix_stem, is_plural, is_singular, mean, median, word_frequency, \
     word_origin, word_polarity, word_tokenize
+from typing import Dict, List, Set, Tuple, Optional, Any, Callable, NoReturn, Union, Mapping, Sequence, Iterable
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
@@ -33,7 +34,6 @@ from pandas import read_csv
 from sklearn.svm import SVR
 from gensim import corpora
 from copy import deepcopy
-from typing import List
 from tqdm import tqdm
 
 import torch.nn.functional as F

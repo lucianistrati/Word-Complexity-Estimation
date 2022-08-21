@@ -1,3 +1,4 @@
+from typing import Dict, List, Set, Tuple, Optional, Any, Callable, NoReturn, Union, Mapping, Sequence, Iterable
 from statistics import mean, median
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer

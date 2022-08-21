@@ -1,5 +1,6 @@
 from used_repos.personal.aggregated_personal_repos.Word_Complexity_Estimation.src.dataset_loader \
     import load_wce_dataset
+from typing import Dict, List, Set, Tuple, Optional, Any, Callable, NoReturn, Union, Mapping, Sequence, Iterable
 from gensim.test.utils import common_texts
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
