@@ -25,3 +25,5 @@ Embedding model: paper_features
 ********************
 TEST RESULT:  0.05910654819095028 with all 5 hyper param optimizations
 ********************
+
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://stand-with-ukraine.pp.ua)
