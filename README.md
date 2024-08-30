@@ -43,5 +43,3 @@ pip install -r requirements.txt
 ## Contributing
 
 Contributions to this repository are welcome. If you find any issues or have suggestions for improvement, feel free to open an issue or submit a pull request.
-
-[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://stand-with-ukraine.pp.ua)
